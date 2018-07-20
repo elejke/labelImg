@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import codecs
-import distutils.spawn
-import os.path
-import platform
 import re
 import sys
+import codecs
+import os.path
+import platform
 import subprocess
+import pandas as pd
+import distutils.spawn
 
 from functools import partial
 from collections import defaultdict
@@ -107,6 +108,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.mImgList = []
         self.dirname = None
         self.labelHist = []
+        self.labelHistIds = dict()
         self.lastOpenDir = None
 
         # Whether we need to save or not.
@@ -767,11 +769,11 @@ class MainWindow(QMainWindow, WindowMixin):
             self.labelFile.verified = self.canvas.verified
 
         def format_shape(s):
-            return dict(label=s.label,
+            return dict(label=self.labelHistIds.get(s.label, s.label),
                         line_color=s.line_color.getRgb(),
                         fill_color=s.fill_color.getRgb(),
                         points=[(p.x(), p.y()) for p in s.points],
-                       # add chris
+                        # add chris
                         difficult = s.difficult)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
@@ -788,7 +790,7 @@ class MainWindow(QMainWindow, WindowMixin):
                     annotationFilePath += TXT_EXT
                 print ('Img: ' + self.filePath + ' -> Its txt: ' + annotationFilePath)
                 self.labelFile.saveYoloFormat(annotationFilePath, shapes, self.filePath, self.imageData, self.labelHist,
-                                                   self.lineColor.getRgb(), self.fillColor.getRgb())
+                                              self.lineColor.getRgb(), self.fillColor.getRgb())
             else:
                 self.labelFile.save(annotationFilePath, shapes, self.filePath, self.imageData,
                                     self.lineColor.getRgb(), self.fillColor.getRgb())
@@ -1380,10 +1382,15 @@ class MainWindow(QMainWindow, WindowMixin):
             with codecs.open(predefClassesFile, 'r', 'utf8') as f:
                 for line in f:
                     line = line.strip()
+                    line, class_id = line.split(",")
+                    line, class_id = line.strip(), class_id.strip()
                     if self.labelHist is None:
                         self.labelHist = [line]
+                        self.labelHistIds = dict()
+                        self.labelHistIds[line] = class_id
                     else:
                         self.labelHist.append(line)
+                        self.labelHistIds[line] = class_id
 
     def loadPascalXMLByFilename(self, xmlPath):
         if self.filePath is None:
@@ -1441,7 +1448,7 @@ def get_main_app(argv=[]):
     win = MainWindow(argv[1] if len(argv) >= 2 else None,
                      argv[2] if len(argv) >= 3 else os.path.join(
                          os.path.dirname(sys.argv[0]),
-                         'data', 'predefined_classes.txt'),
+                         'data', 'predefined_classes_dict.txt'),
                      argv[3] if len(argv) >= 4 else None)
     win.show()
     return app, win
