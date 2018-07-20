@@ -1,0 +1,15 @@
+dog, n11
+person, n22
+cat, n33
+tv, n34
+car, n35
+meatballs, n36
+marinara sauce, n37
+tomato soup, n38
+chicken noodle soup, n39
+french onion soup, n40
+chicken breast, n41
+ribs, n42
+pulled pork, n43
+hamburger, n44
+cavity, n45
